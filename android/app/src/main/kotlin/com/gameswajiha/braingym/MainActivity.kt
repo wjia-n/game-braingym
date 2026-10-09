@@ -1,4 +1,4 @@
-package com.gameswajiha.tictactoe
+package com.gameswajiha.braingym
 
 import io.flutter.embedding.android.FlutterActivity
 
