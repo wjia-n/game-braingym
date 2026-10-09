@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'workout_types.dart';
 import '../services/settings_service.dart';
