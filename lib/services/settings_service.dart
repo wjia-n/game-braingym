@@ -63,7 +63,7 @@ class GymSettings extends ChangeNotifier {
   };
   int gamesPlayed = 0;
   int bestScore = 0;
-  bool isPro = false;
+  bool isPro = true; // everything unlocked — no Pro version
 
   /// Custom theme colors (ARGB ints). Defaults mirror the Oak Study.
   Map<String, int> customColors = Map.of(_defaultCustomColors);
@@ -143,7 +143,7 @@ class GymSettings extends ChangeNotifier {
     }
     gamesPlayed = p.getInt(_kGames) ?? 0;
     bestScore = p.getInt(_kBest) ?? 0;
-    isPro = p.getBool(_kIsPro) ?? false;
+    isPro = true; // everything unlocked
     for (final k in _defaultCustomColors.keys) {
       customColors[k] =
           p.getInt('$_kCustomPrefix$k') ?? _defaultCustomColors[k]!;
