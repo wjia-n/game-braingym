@@ -19,6 +19,9 @@ import 'package:audioplayers/audioplayers.dart';
 ///   or dying.
 /// - Every public method catches player errors; audio can never crash the app.
 class BrainAudio {
+  /// Per-game pitch character (braingym): 1.24x. Makes SFX unique.
+  static const double _pitchMul = 1.240;
+
   static const int _rate = 22050;
   final AudioPlayer _sfx = AudioPlayer();
   final AudioPlayer _music = AudioPlayer();
@@ -107,6 +110,8 @@ class BrainAudio {
 
   List<double> _tone(double freq, double secs,
       {double freqEnd = 0, double attack = 0.02, double harmonics = 0.25}) {
+    freq *= _pitchMul;
+    freqEnd *= _pitchMul;
     final n = (_rate * secs).round();
     final out = List<double>.filled(n, 0);
     for (int i = 0; i < n; i++) {
@@ -192,54 +197,51 @@ class BrainAudio {
       _cache.putIfAbsent(key, () => _wav(build()));
 
   Uint8List _menuBytes() => _clip('music_menu', () {
-        // Warm library waltz: Am – F – C – G soft pads, 16s loop.
-        final seq = [
-          [220.0, 261.63, 329.63], // Am
-          [174.61, 220.0, 261.63], // F
-          [261.63, 329.63, 392.0], // C
-          [196.0, 246.94, 293.66], // G
-        ];
+        // C arpeggiated 0 – 2 – 5 – 4, 16s loop. Unique to braingym.
+        final notes = [130.81, 164.82, 196.00, 164.82, 164.82, 196.00, 246.95, 196.00, 220.00, 261.63, 329.63, 261.63, 196.00, 246.95, 293.67, 246.95];
         final out = <double>[];
-        for (final chord in seq) {
-          out.addAll(_padChord(chord, 4.0));
+        final noteLen = 16.0 / notes.length;
+        for (final n in notes) {
+          out.addAll(_tone(n, noteLen * 0.9, harmonics: 0.3));
+          final gap = List<double>.filled((_rate * noteLen * 0.1).round(), 0);
+          out.addAll(gap);
         }
-        // A few soft melody notes drifting above.
-        final melody = [440.0, 523.25, 587.33, 659.25];
-        final n = out.length;
-        for (int k = 0; k < melody.length; k++) {
-          final start = (n * (k + 0.5) / melody.length).round();
-          final tone = _tone(melody[k], 0.7, harmonics: 0.15);
-          for (int i = 0; i < tone.length && start + i < n; i++) {
-            out[start + i] += tone[i] * 0.18;
-          }
+        // Soft pad underneath
+        final pad = _padChord([130.81, 164.82, 196.00], 16.0);
+        for (int i = 0; i < out.length && i < pad.length; i++) {
+          out[i] += pad[i] * 0.3;
         }
         return out;
       });
 
+
   Uint8List _gameBytes() => _clip('music_game', () {
-        // Gentle marimba-like plucks over a soft drone, 12s loop.
-        final drone = _padChord([130.81, 196.0], 12.0);
-        final plucks = [
-          392.0,
-          440.0,
-          523.25,
-          587.33,
-          659.25,
-          587.33,
-          523.25,
-          440.0,
+        // C waltz 0 – 2 – 5 – 4, 12s loop. Unique to braingym.
+        final seq = [
+          [130.81, 164.82, 196.00],
+          [164.82, 196.00, 246.95],
+          [220.00, 261.63, 329.63],
+          [196.00, 246.95, 293.67]
         ];
-        final n = (_rate * 12).round();
-        final out = List<double>.from(drone);
-        for (int k = 0; k < plucks.length; k++) {
-          final start = (n * k / plucks.length).round();
-          final tone = _tone(plucks[k], 0.5, harmonics: 0.5);
-          for (int i = 0; i < tone.length && start + i < n; i++) {
-            out[start + i] += tone[i] * 0.32;
-          }
+        final out = <double>[];
+        for (final chord in seq) {
+          // Waltz: bass on 1, chords on 2 and 3
+          final bass = _tone(chord[0] / 2, 0.8, harmonics: 0.3);
+          final ch1 = _padChord([chord[1], chord[2]], 0.7);
+          final ch2 = _padChord([chord[1], chord[2]], 0.7);
+          out.addAll(bass);
+          final gap1 = List<double>.filled((_rate * 0.2).round(), 0);
+          out.addAll(gap1);
+          out.addAll(ch1);
+          final gap2 = List<double>.filled((_rate * 0.2).round(), 0);
+          out.addAll(gap2);
+          out.addAll(ch2);
+          final gap3 = List<double>.filled((_rate * 0.2).round(), 0);
+          out.addAll(gap3);
         }
         return out;
       });
+
 
   // ------------------------------------------------------------------ SFX
   Future<void> _play(Uint8List bytes) async {
