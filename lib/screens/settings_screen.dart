@@ -7,6 +7,7 @@ import '../services/settings_service.dart';
 import '../theme/gym_themes.dart';
 import '../theme/study_widgets.dart';
 import 'pro_screen.dart';
+import '../transfer/transfer_ui.dart';
 
 /// Settings: profile name, audio controls, stats, share, rate.
 class SettingsScreen extends StatefulWidget {
@@ -132,6 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
                 children: [
+              TransferSaveTile(gameSlug: 'braingym'),
                   StudyCard(
                     theme: t,
                     child: Column(
